@@ -78,4 +78,4 @@ if missing_count > 0:
     print(f"Players with missing data: {missing_players}")
 
 print(merged_df_2023_2024.columns)
-print(merged_df_2023_2024.loc[merged_df_2023_2024['player_name']=="kenyon martin"])
+print(merged_df_2023_2024.loc[merged_df_2023_2024['player_name']=="royce o'neale"])
