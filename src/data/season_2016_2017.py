@@ -4,6 +4,7 @@ import re
 pd.set_option('display.max_columns', None)
 darko_df = pd.read_excel('../../data/DARKO.xlsx')
 box_score_2016 = pd.read_excel('../../data/boxscore_2016.xlsx')
+lebron = pd.read_excel('../../data/lebron_processed.xlsx')
 #OK i have the dataframe for darko, now I want to filter the dataframe so it removes every instance under 2014
 filtered_darko_df = darko_df[darko_df['season']>=2015]
 filtered_darko_df = filtered_darko_df[filtered_darko_df['season']<2025]
@@ -66,3 +67,33 @@ if missing_count > 0:
 
 print(merged_df_2016_2017.columns)
 
+merged_df_2016_2017 = pd.merge(merged_df_2016_2017,lebron, on=['player_name','season'], how='left')
+print(merged_df_2016_2017.columns)
+
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+
+lebron_missing_count = merged_df_2016_2017[lebron_cols].isnull().any(axis=1).sum()
+print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2016_2017)} ({lebron_missing_count/len(merged_df_2016_2017)*100:.2f}%)")
+
+# If there are missing values, examine which players
+if lebron_missing_count > 0:
+    missing_lebron_players = merged_df_2016_2017[merged_df_2016_2017[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
+    print(f"Players missing LEBRON data: {missing_lebron_players}")
+    
+    # Count how many rows each missing player has
+    missing_counts = merged_df_2016_2017[merged_df_2016_2017[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
+    print("\nMissing row counts by player:")
+    print(missing_counts)
+else:
+    print("All rows have complete LEBRON data!")
+
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'D-LEBRON'] = 0.02
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Shot Creator'
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Defensive Role'] = 'Helper'
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Rotation Role'] = 'Key Rotation'
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'LEBRON WAR'] = 1.33
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'O-LEBRON'] = -0.76
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'LEBRON'] = -0.74
+
+#print(merged_df_2016_2017.loc[merged_df_2016_2017['player_name']=='elliot williams'])
+merged_df_2016_2017.to_excel('../../data/processed_2017.xlsx', index=False)

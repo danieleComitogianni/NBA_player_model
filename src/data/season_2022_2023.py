@@ -4,6 +4,7 @@ import re
 pd.set_option('display.max_columns', None)
 darko_df = pd.read_excel('../../data/DARKO.xlsx')
 box_score_2022 = pd.read_excel('../../data/boxscore_2022.xlsx')
+lebron = pd.read_excel('../../data/lebron_processed.xlsx')
 #OK i have the dataframe for darko, now I want to filter the dataframe so it removes every instance under 2014
 filtered_darko_df = darko_df[darko_df['season']>=2015]
 filtered_darko_df = filtered_darko_df[filtered_darko_df['season']<2025]
@@ -77,3 +78,72 @@ if missing_count > 0:
 
 print(merged_df_2022_2023.columns)
 print(merged_df_2022_2023.loc[merged_df_2022_2023['player_name']=="kenyon martin"])
+merged_df_2022_2023 = pd.merge(merged_df_2022_2023,lebron, on=['player_name','season'], how='left')
+print(merged_df_2022_2023.columns)
+
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+
+lebron_missing_count = merged_df_2022_2023[lebron_cols].isnull().any(axis=1).sum()
+print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2022_2023)} ({lebron_missing_count/len(merged_df_2022_2023)*100:.2f}%)")
+
+# If there are missing values, examine which players
+if lebron_missing_count > 0:
+    missing_lebron_players = merged_df_2022_2023[merged_df_2022_2023[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
+    print(f"Players missing LEBRON data: {missing_lebron_players}")
+    
+    # Count how many rows each missing player has
+    missing_counts = merged_df_2022_2023[merged_df_2022_2023[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
+    print("\nMissing row counts by player:")
+    print(missing_counts)
+else:
+    print("All rows have complete LEBRON data!")
+
+"""Manually inserting calculated stats for players missing data from my LEBRON dataset"""
+
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'moritz wagner', 'D-LEBRON'] = 0.32
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'moritz wagner', 'Offensive Archetype'] = 'Roll + Cut Big'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'moritz wagner', 'Defensive Role'] = 'Mobile Big'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'moritz wagner', 'Rotation Role'] = 'Rotation'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'moritz wagner', 'LEBRON WAR'] = 2.37
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'moritz wagner', 'O-LEBRON'] = 0.63
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'moritz wagner', 'LEBRON'] = 0.95
+
+
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'john konchar', 'D-LEBRON'] = 0.64
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'john konchar', 'Offensive Archetype'] = 'Movement Shooter'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'john konchar', 'Defensive Role'] = 'Point of Attack'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'john konchar', 'Rotation Role'] = 'Key Rotation'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'john konchar', 'LEBRON WAR'] = 2.11
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'john konchar', 'O-LEBRON'] = -0.85
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'john konchar', 'LEBRON'] = -0.20
+
+"""TRISTAN THOMPSON, 6 GAMES, NO LEBRON DATA"""
+
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'lester quinones', 'D-LEBRON'] = -0.18
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'lester quinones', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'lester quinones', 'Defensive Role'] = 'Helper'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'lester quinones', 'Rotation Role'] = 'Too Few Games'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'lester quinones', 'LEBRON WAR'] = 0.02
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'lester quinones', 'O-LEBRON'] = -0.12
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'lester quinones', 'LEBRON'] = -0.30
+
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'deonte burton', 'D-LEBRON'] = -0.11
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'deonte burton', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'deonte burton', 'Defensive Role'] = 'Mobile Big'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'deonte burton', 'Rotation Role'] = 'Too Few Games'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'deonte burton', 'LEBRON WAR'] = 0.01
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'deonte burton', 'O-LEBRON'] = -0.19
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'deonte burton', 'LEBRON'] = -0.30
+
+"""DAQUAN JEFFERIES, 6 GAMES, NO LEBRON DATA"""
+
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'frank jackson', 'D-LEBRON'] = -0.21
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'frank jackson', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'frank jackson', 'Defensive Role'] = 'Anchor Big'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'frank jackson', 'Rotation Role'] = 'Too Few Games'
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'frank jackson', 'LEBRON WAR'] = 0.01
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'frank jackson', 'O-LEBRON'] = -0.03
+merged_df_2022_2023.loc[merged_df_2022_2023['player_name'] == 'frank jackson', 'LEBRON'] = -0.24
+
+#print(merged_df_2016_2017.loc[merged_df_2016_2017['player_name']=='elliot williams'])
+merged_df_2022_2023.to_excel('../../data/processed_2023.xlsx', index=False)

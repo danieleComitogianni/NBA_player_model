@@ -7,6 +7,7 @@ box_score_2015 = pd.read_excel('../../data/boxscore_2015.xlsx')
 #OK i have the dataframe for darko, now I want to filter the dataframe so it removes every instance under 2014
 filtered_darko_df = darko_df[darko_df['season']>=2015]
 filtered_darko_df = filtered_darko_df[filtered_darko_df['season']<2025]
+lebron = pd.read_excel('../../data/lebron_processed.xlsx')
 
 box_score_2015['DATE'] = pd.to_datetime(box_score_2015['DATE'])
 box_score_2015.insert(3,'season',2016)
@@ -15,6 +16,7 @@ def clean_name(name):
     name = name.lower().strip()
     name = re.sub(r'[.,]','',name)
     name = re.sub(r'\bsr\b','',name)
+    name = re.sub(r'\b(sr|jr|ii|iii|iv)\b', '', name)
     return name.strip()
 
 box_score_2015 = box_score_2015.rename(columns={'OWN \nTEAM':'team_name','PLAYER \nFULL NAME': 'player_name', 'DAYS\nREST':'rest_days', 'STARTER\n(Y/N)': 'starter(y/n)','GAME-ID':'game_id','DATE':'date','PLAYER-ID':'player_id','POSITION':'position','OPPONENT \nTEAM':'opponent_team', 'VENUE\n(R/H)':'venue(R/H)','STARTER\n(Y/N)':'starter(Y/N)','USAGE \nRATE (%)':'usage_rate(%)'})
@@ -40,3 +42,40 @@ if missing_count > 0:
     print(f"Players with missing data: {missing_players}")
 
 print(merged_df_2015_2016.columns)
+
+merged_df_2015_2016 = pd.merge(merged_df_2015_2016,lebron, on=['player_name','season'], how='left')
+print(merged_df_2015_2016.columns)
+
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+
+lebron_missing_count = merged_df_2015_2016[lebron_cols].isnull().any(axis=1).sum()
+print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2015_2016)} ({lebron_missing_count/len(merged_df_2015_2016)*100:.2f}%)")
+
+# If there are missing values, examine which players
+if lebron_missing_count > 0:
+    missing_lebron_players = merged_df_2015_2016[merged_df_2015_2016[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
+    print(f"Players missing LEBRON data: {missing_lebron_players}")
+    
+    # Count how many rows each missing player has
+    missing_counts = merged_df_2015_2016[merged_df_2015_2016[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
+    print("\nMissing row counts by player:")
+    print(missing_counts)
+else:
+    print("All rows have complete LEBRON data!")
+
+
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'D-LEBRON'] = -1.26
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Athletic Finisher'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Defensive Role'] = 'Helper'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Rotation Role'] = 'Key Rotation'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'LEBRON WAR'] = -0.22
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'O-LEBRON'] = -1.32
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'LEBRON'] = -2.59
+
+"""Dorell Wright MISSING"""
+
+"""John Holland MISSING"""
+
+
+#print(merged_df_2015_2016.loc[merged_df_2015_2016['player_name']=='elliot williams'])
+merged_df_2015_2016.to_excel('../../data/processed_2016.xlsx', index=False)

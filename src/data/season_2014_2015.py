@@ -63,6 +63,53 @@ if lebron_missing_count > 0:
 else:
     print("All rows have complete LEBRON data!")
 
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'D-LEBRON'] = 0.03
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Post Scorer'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'Defensive Role'] = 'Helper'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'Rotation Role'] = 'Key Rotation'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'LEBRON WAR'] = 0.96
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'O-LEBRON'] = -0.70
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'LEBRON'] = -0.67
+
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jeff adrien', 'D-LEBRON'] = 0.60
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jeff adrien', 'Offensive Archetype'] = 'Post Scorer'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jeff adrien', 'Defensive Role'] = 'Helper'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jeff adrien', 'Rotation Role'] = 'Garbage Time'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jeff adrien', 'LEBRON WAR'] = 0.33
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jeff adrien', 'O-LEBRON'] = -0.58
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jeff adrien', 'LEBRON'] = 0.02
+
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'elliot williams', 'D-LEBRON'] = -0.61
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'elliot williams', 'Offensive Archetype'] = 'Movement Shooter'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'elliot williams', 'Defensive Role'] = 'Wing Stopper'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'elliot williams', 'Rotation Role'] = 'Too Few Games'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'elliot williams', 'LEBRON WAR'] = 0.08
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'elliot williams', 'O-LEBRON'] = -0.61
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'elliot williams', 'LEBRON'] = -1.23
+
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'will cherry', 'D-LEBRON'] = -0.41
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'will cherry', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'will cherry', 'Defensive Role'] = 'Point of Attack'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'will cherry', 'Rotation Role'] = 'Too Few Games'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'will cherry', 'LEBRON WAR'] = 0.05
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'will cherry', 'O-LEBRON'] = -0.72
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'will cherry', 'LEBRON'] = -1.13
+
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'patrick christopher', 'D-LEBRON'] = -0.32
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'patrick christopher', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'patrick christopher', 'Defensive Role'] = 'Chaser'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'patrick christopher', 'Rotation Role'] = 'Too Few Games'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'patrick christopher', 'LEBRON WAR'] = 0.03
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'patrick christopher', 'O-LEBRON'] = -0.38
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'patrick christopher', 'LEBRON'] = -0.70
+
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jerrelle benimon', 'D-LEBRON'] = -0.34
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jerrelle benimon', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jerrelle benimon', 'Defensive Role'] = 'Helper'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jerrelle benimon', 'Rotation Role'] = 'Too Few Games'
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jerrelle benimon', 'LEBRON WAR'] = 0.00
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jerrelle benimon', 'O-LEBRON'] = -0.09
+merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'jerrelle benimon', 'LEBRON'] = -0.44
 
 print(merged_df_2014_2015.loc[merged_df_2014_2015['player_name']=='elliot williams'])
-merged_df_2014_2015.to_excel('../../data/processed_2014.xlsx', index=False)
+merged_df_2014_2015.to_excel('../../data/processed_2015.xlsx', index=False)
