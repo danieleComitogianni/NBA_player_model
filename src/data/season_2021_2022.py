@@ -83,22 +83,6 @@ print(merged_df_2021_2022.columns)
 
 lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
 
-lebron_missing_count = merged_df_2021_2022[lebron_cols].isnull().any(axis=1).sum()
-print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2021_2022)} ({lebron_missing_count/len(merged_df_2021_2022)*100:.2f}%)")
-
-# If there are missing values, examine which players
-if lebron_missing_count > 0:
-    missing_lebron_players = merged_df_2021_2022[merged_df_2021_2022[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
-    print(f"Players missing LEBRON data: {missing_lebron_players}")
-    
-    # Count how many rows each missing player has
-    missing_counts = merged_df_2021_2022[merged_df_2021_2022[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
-    print("\nMissing row counts by player:")
-    print(missing_counts)
-else:
-    print("All rows have complete LEBRON data!")
-
-
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'moritz wagner', 'D-LEBRON'] = -0.41
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'moritz wagner', 'Offensive Archetype'] = 'Stretch Big'
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'moritz wagner', 'Defensive Role'] = 'Mobile Big'
@@ -122,7 +106,7 @@ merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'frank jackson', '
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'frank jackson', 'Rotation Role'] = 'Key Rotation'
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'frank jackson', 'LEBRON WAR'] = 0.08
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'frank jackson', 'O-LEBRON'] = -0.76
-merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'frank jackson', 'LEBRON'] = -2.3
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'frank jackson', 'LEBRON'] = -2.30
 
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'justin robinson', 'D-LEBRON'] = -0.72
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'justin robinson', 'Offensive Archetype'] = 'Low Minute'
@@ -150,11 +134,11 @@ merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'norvel pelle', 'L
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'norvel pelle', 'O-LEBRON'] = -0.12
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'norvel pelle', 'LEBRON'] = -0.64
 
-merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'D-LEBRON'] = -0.2
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'D-LEBRON'] = -0.20
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'Offensive Archetype'] = 'Low Minute'
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'Defensive Role'] = 'Point of Attack'
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'Rotation Role'] = 'Too Few Games'
-merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'LEBRON WAR'] = 0.0
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'LEBRON WAR'] = 0.00
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'O-LEBRON'] = -0.25
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'tyler hall', 'LEBRON'] = -0.45
 
@@ -162,9 +146,35 @@ merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique',
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique', 'Offensive Archetype'] = 'Low Minute'
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique', 'Defensive Role'] = 'Helper'
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique', 'Rotation Role'] = 'Too Few Games'
-merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique', 'LEBRON WAR'] = 0.0
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique', 'LEBRON WAR'] = 0.00
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique', 'O-LEBRON'] = -0.09
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'jaime echenique', 'LEBRON'] = -0.07
+
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'luca vildoza', 'D-LEBRON'] = -1.35
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'luca vildoza', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'luca vildoza', 'Defensive Role'] = 'Helper'
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'luca vildoza', 'Rotation Role'] = 'Too Few Games'
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'luca vildoza', 'LEBRON WAR'] = 0.00
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'luca vildoza', 'O-LEBRON'] = -1.35
+merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'luca vildoza', 'LEBRON'] = -2.70
+
+lebron_missing_count = merged_df_2021_2022[lebron_cols].isnull().any(axis=1).sum()
+print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2021_2022)} ({lebron_missing_count/len(merged_df_2021_2022)*100:.2f}%)")
+
+# If there are missing values, examine which players
+if lebron_missing_count > 0:
+    missing_lebron_players = merged_df_2021_2022[merged_df_2021_2022[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
+    print(f"Players missing LEBRON data: {missing_lebron_players}")
+    
+    # Count how many rows each missing player has
+    missing_counts = merged_df_2021_2022[merged_df_2021_2022[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
+    print("\nMissing row counts by player:")
+    print(missing_counts)
+else:
+    print("All rows have complete LEBRON data!")
+
+
+
 
 #print(merged_df_2016_2017.loc[merged_df_2016_2017['player_name']=='elliot williams'])
 merged_df_2021_2022.to_excel('../../data/processed_2022.xlsx', index=False)

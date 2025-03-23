@@ -48,6 +48,31 @@ print(merged_df_2015_2016.columns)
 
 lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
 
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'D-LEBRON'] = -1.26
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Athletic Finisher'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Defensive Role'] = 'Helper'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Rotation Role'] = 'Key Rotation'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'LEBRON WAR'] = -0.22
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'O-LEBRON'] = -1.32
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'LEBRON'] = -2.59
+
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'dorell wright', 'D-LEBRON'] = -0.40
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'dorell wright', 'Offensive Archetype'] = 'Movement Shooter'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'dorell wright', 'Defensive Role'] = 'Helper'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'dorell wright', 'Rotation Role'] = 'Rotation'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'dorell wright', 'LEBRON WAR'] = 0.00
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'dorell wright', 'O-LEBRON'] = -0.33
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'dorell wright', 'LEBRON'] = -0.73
+
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'john holland', 'D-LEBRON'] = 0.68
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'john holland', 'Offensive Archetype'] = 'Movement Shooter'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'john holland', 'Defensive Role'] = 'Chaser'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'john holland', 'Rotation Role'] = 'Too Few Games'
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'john holland', 'LEBRON WAR'] = 0.00
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'john holland', 'O-LEBRON'] = -1.11
+merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'john holland', 'LEBRON'] = -0.43
+
+
 lebron_missing_count = merged_df_2015_2016[lebron_cols].isnull().any(axis=1).sum()
 print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2015_2016)} ({lebron_missing_count/len(merged_df_2015_2016)*100:.2f}%)")
 
@@ -64,18 +89,5 @@ else:
     print("All rows have complete LEBRON data!")
 
 
-merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'D-LEBRON'] = -1.26
-merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Athletic Finisher'
-merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Defensive Role'] = 'Helper'
-merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Rotation Role'] = 'Key Rotation'
-merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'LEBRON WAR'] = -0.22
-merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'O-LEBRON'] = -1.32
-merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'LEBRON'] = -2.59
-
-"""Dorell Wright MISSING"""
-
-"""John Holland MISSING"""
-
-
-#print(merged_df_2015_2016.loc[merged_df_2015_2016['player_name']=='elliot williams'])
+#print(merged_df_2015_2016.loc[merged_df_2015_2016['player_name']=='dorell wright'])
 merged_df_2015_2016.to_excel('../../data/processed_2016.xlsx', index=False)

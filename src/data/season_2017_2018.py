@@ -74,21 +74,6 @@ print(merged_df_2017_2018.columns)
 
 lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
 
-lebron_missing_count = merged_df_2017_2018[lebron_cols].isnull().any(axis=1).sum()
-print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2017_2018)} ({lebron_missing_count/len(merged_df_2017_2018)*100:.2f}%)")
-
-# If there are missing values, examine which players
-if lebron_missing_count > 0:
-    missing_lebron_players = merged_df_2017_2018[merged_df_2017_2018[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
-    print(f"Players missing LEBRON data: {missing_lebron_players}")
-    
-    # Count how many rows each missing player has
-    missing_counts = merged_df_2017_2018[merged_df_2017_2018[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
-    print("\nMissing row counts by player:")
-    print(missing_counts)
-else:
-    print("All rows have complete LEBRON data!")
-
 merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'dakari johnson', 'D-LEBRON'] = 0.37
 merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'dakari johnson', 'Offensive Archetype'] = 'Post Scorer'
 merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'dakari johnson', 'Defensive Role'] = 'Helper'
@@ -121,7 +106,29 @@ merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'xavier rathan-may
 merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'xavier rathan-mayes', 'O-LEBRON'] = -0.72
 merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'xavier rathan-mayes', 'LEBRON'] = -0.66
 
-"""TY LAWSON MISSING DATA"""
+merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'ty lawson', 'D-LEBRON'] = -1.09
+merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'ty lawson', 'Offensive Archetype'] = 'Slasher'
+merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'ty lawson', 'Defensive Role'] = 'Point of Attack'
+merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'ty lawson', 'Rotation Role'] = 'Too Few Games'
+merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'ty lawson', 'LEBRON WAR'] = 0.00
+merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'ty lawson', 'O-LEBRON'] = -1.38
+merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'ty lawson', 'LEBRON'] = -2.47
+
+lebron_missing_count = merged_df_2017_2018[lebron_cols].isnull().any(axis=1).sum()
+print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2017_2018)} ({lebron_missing_count/len(merged_df_2017_2018)*100:.2f}%)")
+# If there are missing values, examine which players
+if lebron_missing_count > 0:
+    missing_lebron_players = merged_df_2017_2018[merged_df_2017_2018[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
+    print(f"Players missing LEBRON data: {missing_lebron_players}")
+    
+    # Count how many rows each missing player has
+    missing_counts = merged_df_2017_2018[merged_df_2017_2018[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
+    print("\nMissing row counts by player:")
+    print(missing_counts)
+else:
+    print("All rows have complete LEBRON data!")
+
+
 
 #print(merged_df_2016_2017.loc[merged_df_2016_2017['player_name']=='elliot williams'])
 merged_df_2017_2018.to_excel('../../data/processed_2018.xlsx', index=False)

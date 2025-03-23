@@ -72,6 +72,14 @@ print(merged_df_2016_2017.columns)
 
 lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
 
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'D-LEBRON'] = 0.02
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Shot Creator'
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Defensive Role'] = 'Helper'
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Rotation Role'] = 'Key Rotation'
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'LEBRON WAR'] = 1.33
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'O-LEBRON'] = -0.76
+merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'LEBRON'] = -0.74
+
 lebron_missing_count = merged_df_2016_2017[lebron_cols].isnull().any(axis=1).sum()
 print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2016_2017)} ({lebron_missing_count/len(merged_df_2016_2017)*100:.2f}%)")
 
@@ -87,13 +95,7 @@ if lebron_missing_count > 0:
 else:
     print("All rows have complete LEBRON data!")
 
-merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'D-LEBRON'] = 0.02
-merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Shot Creator'
-merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Defensive Role'] = 'Helper'
-merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'Rotation Role'] = 'Key Rotation'
-merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'LEBRON WAR'] = 1.33
-merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'O-LEBRON'] = -0.76
-merged_df_2016_2017.loc[merged_df_2016_2017['player_name'] == 'terrence jones', 'LEBRON'] = -0.74
+
 
 #print(merged_df_2016_2017.loc[merged_df_2016_2017['player_name']=='elliot williams'])
 merged_df_2016_2017.to_excel('../../data/processed_2017.xlsx', index=False)

@@ -80,22 +80,6 @@ print(merged_df_2020_2021.columns)
 
 lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
 
-lebron_missing_count = merged_df_2020_2021[lebron_cols].isnull().any(axis=1).sum()
-print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2020_2021)} ({lebron_missing_count/len(merged_df_2020_2021)*100:.2f}%)")
-
-# If there are missing values, examine which players
-if lebron_missing_count > 0:
-    missing_lebron_players = merged_df_2020_2021[merged_df_2020_2021[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
-    print(f"Players missing LEBRON data: {missing_lebron_players}")
-    
-    # Count how many rows each missing player has
-    missing_counts = merged_df_2020_2021[merged_df_2020_2021[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
-    print("\nMissing row counts by player:")
-    print(missing_counts)
-else:
-    print("All rows have complete LEBRON data!")
-
-
 merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'moritz wagner', 'D-LEBRON'] = 0.47
 merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'moritz wagner', 'Offensive Archetype'] = 'Stretch Big'
 merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'moritz wagner', 'Defensive Role'] = 'Helper'
@@ -161,13 +145,29 @@ merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'jeremiah martin',
 merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'jeremiah martin', 'O-LEBRON'] = -0.32
 merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'jeremiah martin', 'LEBRON'] = -0.58
 
-merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'Cam Reynolds', 'D-LEBRON'] = -0.20
-merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'Cam Reynolds', 'Offensive Archetype'] = 'Low Minute'
-merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'Cam Reynolds', 'Defensive Role'] = 'Helper'
-merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'Cam Reynolds', 'Rotation Role'] = 'Too Few Games'
-merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'Cam Reynolds', 'LEBRON WAR'] = 0.05
-merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'Cam Reynolds', 'O-LEBRON'] = -0.35
-merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'Cam Reynolds', 'LEBRON'] = -0.54
+merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'cameron reynolds', 'D-LEBRON'] = -0.20
+merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'cameron reynolds', 'Offensive Archetype'] = 'Low Minute'
+merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'cameron reynolds', 'Defensive Role'] = 'Helper'
+merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'cameron reynolds', 'Rotation Role'] = 'Too Few Games'
+merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'cameron reynolds', 'LEBRON WAR'] = 0.05
+merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'cameron reynolds', 'O-LEBRON'] = -0.35
+merged_df_2020_2021.loc[merged_df_2020_2021['player_name'] == 'cameron reynolds', 'LEBRON'] = -0.54
+
+lebron_missing_count = merged_df_2020_2021[lebron_cols].isnull().any(axis=1).sum()
+print(f"Rows with missing LEBRON metrics: {lebron_missing_count} out of {len(merged_df_2020_2021)} ({lebron_missing_count/len(merged_df_2020_2021)*100:.2f}%)")
+
+# If there are missing values, examine which players
+if lebron_missing_count > 0:
+    missing_lebron_players = merged_df_2020_2021[merged_df_2020_2021[lebron_cols].isnull().any(axis=1)]['player_name'].unique()
+    print(f"Players missing LEBRON data: {missing_lebron_players}")
+    
+    # Count how many rows each missing player has
+    missing_counts = merged_df_2020_2021[merged_df_2020_2021[lebron_cols].isnull().any(axis=1)]['player_name'].value_counts()
+    print("\nMissing row counts by player:")
+    print(missing_counts)
+else:
+    print("All rows have complete LEBRON data!")
+
 
 #print(merged_df_2016_2017.loc[merged_df_2016_2017['player_name']=='elliot williams'])
 merged_df_2020_2021.to_excel('../../data/processed_2021.xlsx', index=False)
