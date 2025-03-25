@@ -98,7 +98,7 @@ lebron_df = lebron_df[lebron_df['season']<2025]
 lebron_df = lebron_df.drop(columns=['Team(s)'])
 print("DataFrame index info:", lebron_df.index)
 # Select just the columns you need
-cols_to_keep = ['player_name', 'season','LEBRON WAR' ,'LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype','Defensive Role']
+cols_to_keep = ['player_name', 'season','LEBRON WAR' ,'LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype','Defensive Role','Rotation Role']
 # Add any other columns you need
 lebron_df = lebron_df[cols_to_keep]
 print(lebron_df.columns)

@@ -46,7 +46,7 @@ merged_df_2014_2015 = pd.merge(merged_df_2014_2015,lebron, on=['player_name','se
 
 print(merged_df_2014_2015.columns)
 
-lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role', 'Rotation Role']
 
 merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'D-LEBRON'] = 0.03
 merged_df_2014_2015.loc[merged_df_2014_2015['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Post Scorer'
@@ -111,5 +111,5 @@ if lebron_missing_count > 0:
 else:
     print("All rows have complete LEBRON data")
 
-
+print(merged_df_2014_2015.info())
 merged_df_2014_2015.to_excel('../../data/processed_2015.xlsx', index=False)

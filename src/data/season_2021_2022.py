@@ -81,7 +81,7 @@ print(merged_df_2021_2022.columns)
 merged_df_2021_2022 = pd.merge(merged_df_2021_2022,lebron, on=['player_name','season'], how='left')
 print(merged_df_2021_2022.columns)
 
-lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role','Rotation Role']
 
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'moritz wagner', 'D-LEBRON'] = -0.41
 merged_df_2021_2022.loc[merged_df_2021_2022['player_name'] == 'moritz wagner', 'Offensive Archetype'] = 'Stretch Big'

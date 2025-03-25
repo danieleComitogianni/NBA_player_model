@@ -72,7 +72,7 @@ print(merged_df_2017_2018.columns)
 merged_df_2017_2018 = pd.merge(merged_df_2017_2018,lebron, on=['player_name','season'], how='left')
 print(merged_df_2017_2018.columns)
 
-lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role','Rotation Role']
 
 merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'dakari johnson', 'D-LEBRON'] = 0.37
 merged_df_2017_2018.loc[merged_df_2017_2018['player_name'] == 'dakari johnson', 'Offensive Archetype'] = 'Post Scorer'

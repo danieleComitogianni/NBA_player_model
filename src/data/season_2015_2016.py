@@ -46,7 +46,7 @@ print(merged_df_2015_2016.columns)
 merged_df_2015_2016 = pd.merge(merged_df_2015_2016,lebron, on=['player_name','season'], how='left')
 print(merged_df_2015_2016.columns)
 
-lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role','Rotation Role']
 
 merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'D-LEBRON'] = -1.26
 merged_df_2015_2016.loc[merged_df_2015_2016['player_name'] == 'terrence jones', 'Offensive Archetype'] = 'Athletic Finisher'

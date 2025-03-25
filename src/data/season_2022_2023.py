@@ -81,7 +81,7 @@ print(merged_df_2022_2023.loc[merged_df_2022_2023['player_name']=="kenyon martin
 merged_df_2022_2023 = pd.merge(merged_df_2022_2023,lebron, on=['player_name','season'], how='left')
 print(merged_df_2022_2023.columns)
 
-lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role']
+lebron_cols = ['LEBRON WAR','LEBRON', 'O-LEBRON', 'D-LEBRON','Offensive Archetype', 'Defensive Role','Rotation Role']
 
 """Manually inserting calculated stats for players missing data from my LEBRON dataset"""
 
