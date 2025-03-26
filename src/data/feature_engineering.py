@@ -126,7 +126,7 @@ merged_df = df_orig.merge(
 
 
 merged_df.to_excel('../../data/feature_engineered_2015.xlsx', index=False)
-print(merged_df.columns.to_list())
+print(merged_df.columns)
 merged_df.head(10).to_excel('../../data/sample_feature_engineered_2015.xlsx', index=False)
 
 
