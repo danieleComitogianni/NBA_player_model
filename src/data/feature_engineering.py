@@ -5,7 +5,6 @@ pd.set_option('display.max_columns', None)
 
 df_orig = pd.read_excel('../../data/processed_2015.xlsx')
 df_orig['date'] = pd.to_datetime(df_orig['date'])
-
 df = df_orig.copy()
 
 def calc_moving_avg_3(df, columns):
@@ -92,9 +91,30 @@ def add_rolling_averages(df, col, windows=[3, 5, 10], group_col='player_name'):
     return df
 
 features = ['FG%', '3P%', 'eFG%', 'TS%', 'TSA', 'PTS_per36', 'TOT_per36', 'A_per36', 'GmSc']
-
+avg_features = ['MIN','PTS','FG%', '3P%', 'eFG%', 'TS%', 'TSA','BL','A','TO', 'GmSc']
 for feat in features:
     df = add_rolling_averages(df, feat, windows=[3, 5, 10], group_col='player_name')
+
+def add_season_average(df, columns, group_col='player_name'):
+    """Calculate player's season average at the instance of that time step"""
+    df = df.sort_values([group_col, 'date'])
+    for col in columns:
+        season_avg_col = f'season_avg_{col}'
+        df[season_avg_col] = df.groupby(group_col)[col].transform(lambda x: x.expanding(min_periods=1).mean().shift(1))
+        # filling first game nan values with the current game 
+        df[season_avg_col] = df[season_avg_col].fillna(df[col])
+    return df
+
+def add_game_vs_season_diff(df, columns, prefix='diff_'):
+    """For each column, compute the difference between the current game value and the season average"""
+    for col in columns:
+        diff_col = f'{prefix}{col}'
+        df[diff_col] = df[col] - df[f'season_avg_{col}']
+    return df
+
+df = add_season_average(df,avg_features)
+df = add_game_vs_season_diff(df,avg_features)
+
 
 new_cols = [c for c in df.columns if c not in df_orig.columns]
 
@@ -104,8 +124,10 @@ merged_df = df_orig.merge(
     how='left'
 )
 
+
 merged_df.to_excel('../../data/feature_engineered_2015.xlsx', index=False)
-print(merged_df.info())
-print(df_orig.info())
+print(merged_df.columns.to_list())
+merged_df.head(10).to_excel('../../data/sample_feature_engineered_2015.xlsx', index=False)
+
 
 
