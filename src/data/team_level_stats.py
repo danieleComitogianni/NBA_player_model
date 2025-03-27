@@ -4,15 +4,15 @@ pd.set_option('display.max_columns', None)
 
 # Load data
 team_df = pd.read_excel('../../data/2014-2015_NBA_Box_Score_Team-Stats.xlsx')
-print(team_df.columns)
+print("Original columns:", team_df.columns)
 
 # Select relevant columns
 keep_columns = [
-  'GAME-ID', 'DATE', 'TEAM', 'FG', 'FGA', '3P', '3PA', 'FT', 'FTA',
-  'OR', 'DR', 'TOT', 'A', 'PF', 'ST', 'TO', 'BL', 'PTS', 'POSS', 'PACE', 'OEFF', 'DEFF'
+    'GAME-ID', 'DATE', 'TEAM', 'FG', 'FGA', '3P', '3PA', 'FT', 'FTA',
+    'OR', 'DR', 'TOT', 'A', 'PF', 'ST', 'TO', 'BL', 'PTS', 'POSS', 'PACE', 'OEFF', 'DEFF'
 ]
 df = team_df[keep_columns].copy()
-print(df.columns)
+print("Selected columns:", df.columns)
 
 # Convert dates and sort chronologically
 df['DATE'] = pd.to_datetime(df['DATE'])
@@ -20,112 +20,251 @@ df = df.sort_values('DATE')
 
 # Calculate daily and cumulative league averages
 daily_avg = df.groupby('DATE').agg({
-  'OEFF': 'mean',
-  'DEFF': 'mean'
+    'OEFF': 'mean',
+    'DEFF': 'mean',
+    'PACE': 'mean'
 }).rename(columns={
-  'OEFF': 'daily_avg_oeff',
-  'DEFF': 'daily_avg_deff'
+    'OEFF': 'daily_avg_oeff',
+    'DEFF': 'daily_avg_deff',
+    'PACE': 'daily_avg_pace'
 }).reset_index()
 
 daily_avg['cum_league_avg_oeff'] = daily_avg['daily_avg_oeff'].expanding().mean().shift(1)
 daily_avg['cum_league_avg_deff'] = daily_avg['daily_avg_deff'].expanding().mean().shift(1)
+daily_avg['cum_league_avg_pace'] = daily_avg['daily_avg_pace'].expanding().mean().shift(1)
 daily_avg['cum_league_avg_oeff'] = daily_avg['cum_league_avg_oeff'].fillna(daily_avg['daily_avg_oeff'])
 daily_avg['cum_league_avg_deff'] = daily_avg['cum_league_avg_deff'].fillna(daily_avg['daily_avg_deff'])
+daily_avg['cum_league_avg_pace'] = daily_avg['cum_league_avg_pace'].fillna(daily_avg['daily_avg_pace'])
 
-df = pd.merge(df, daily_avg[['DATE', 'cum_league_avg_oeff', 'cum_league_avg_deff']], on='DATE', how='left')
+df = pd.merge(df, daily_avg[['DATE', 'cum_league_avg_oeff', 'cum_league_avg_deff', 'cum_league_avg_pace']], on='DATE', how='left')
+
+# Calculate assist rate for each game
+df['ast_rate'] = df['A'] / df['FG']  # Assists per made field goal
 
 # Create a dictionary to track team stats cumulatively
 team_stats = {}
 
-# Initialize dictionary to store team stats with league average defaults
+# Initialize dictionary to store team stats
 for team in df['TEAM'].unique():
-  team_stats[team] = {
-      'oeff_sum': 0,
-      'deff_sum': 0,
-      'games': 0
-  }
+    team_stats[team] = {
+        'oeff_sum': 0,
+        'deff_sum': 0,
+        'pace_sum': 0,
+        'ast_sum': 0,
+        'fg_sum': 0,
+        'or_sum': 0,    # Offensive rebounds
+        'dr_sum': 0,    # Defensive rebounds
+        'opp_or_sum': 0, # Opponent offensive rebounds
+        'opp_dr_sum': 0, # Opponent defensive rebounds
+        'games': 0
+    }
 
-# Add columns for adjusted metrics
+# Add columns for team and opponent metrics
 df['team_avg_oeff'] = np.nan
 df['team_avg_deff'] = np.nan
+df['team_avg_pace'] = np.nan
+df['team_avg_ast_rate'] = np.nan
+df['team_avg_orr'] = np.nan
+df['team_avg_drr'] = np.nan
 df['opp_avg_oeff'] = np.nan
 df['opp_avg_deff'] = np.nan
+df['opp_avg_pace'] = np.nan
+df['opp_avg_orr'] = np.nan
+df['opp_avg_drr'] = np.nan
 df['adj_oeff'] = np.nan
 df['adj_deff'] = np.nan
+df['off_advantage'] = np.nan
+df['def_advantage'] = np.nan
+df['pace_diff'] = np.nan
+df['orr_advantage'] = np.nan
+df['drr_advantage'] = np.nan
 
-# Get first day league averages to use for teams with no history
+# Get first day league averages
 first_day = df['DATE'].min()
 first_day_oeff = df[df['DATE'] == first_day]['OEFF'].mean()
 first_day_deff = df[df['DATE'] == first_day]['DEFF'].mean()
+first_day_pace = df[df['DATE'] == first_day]['PACE'].mean()
 
-# FIRST PASS: Calculate team averages for all games
+# FIRST PASS: Calculate rebounding rates
+game_opp_rebs = {}  # Store opponent rebound data by game_id and team
+
 for idx, row in df.iterrows():
-  team = row['TEAM']
-  
-  # Calculate and store team averages before adding the current game
-  if team_stats[team]['games'] > 0:
-      df.at[idx, 'team_avg_oeff'] = team_stats[team]['oeff_sum'] / team_stats[team]['games']
-      df.at[idx, 'team_avg_deff'] = team_stats[team]['deff_sum'] / team_stats[team]['games']
-  else:
-      # For first game, use first day league average
-      df.at[idx, 'team_avg_oeff'] = first_day_oeff
-      df.at[idx, 'team_avg_deff'] = first_day_deff
-  
-  # Update team's cumulative stats for future games
-  team_stats[team]['oeff_sum'] += row['OEFF']
-  team_stats[team]['deff_sum'] += row['DEFF']
-  team_stats[team]['games'] += 1
+    game_id = row['GAME-ID']
+    team = row['TEAM']
+    
+    # Create a dictionary for this game if it doesn't exist
+    if game_id not in game_opp_rebs:
+        game_opp_rebs[game_id] = {}
+    
+    # Store this team's rebounds for opponents to use
+    game_opp_rebs[game_id][team] = {
+        'or': row['OR'],
+        'dr': row['DR']
+    }
 
-# SECOND PASS: Calculate opponent averages and adjusted metrics
+# Calculate rebounding rates for each game
 for idx, row in df.iterrows():
-  game_id = row['GAME-ID']
-  team = row['TEAM']
-  
-  # Find opponent in this game
-  opponent_row = df[(df['GAME-ID'] == game_id) & (df['TEAM'] != team)]
-  if len(opponent_row) == 0:
-      continue
-      
-  opponent = opponent_row.iloc[0]['TEAM']
-  
-  # Get opponent's team_avg values from their row for this game
-  opp_idx = opponent_row.index[0]
-  opp_avg_oeff = df.at[opp_idx, 'team_avg_oeff']
-  opp_avg_deff = df.at[opp_idx, 'team_avg_deff']
-  
-  # Store opponent averages
-  df.at[idx, 'opp_avg_oeff'] = opp_avg_oeff
-  df.at[idx, 'opp_avg_deff'] = opp_avg_deff
-  
-  # Calculate adjusted metrics
-  league_avg_oeff = row['cum_league_avg_oeff']
-  league_avg_deff = row['cum_league_avg_deff']
-  
-  df.at[idx, 'adj_deff'] = row['DEFF'] * (opp_avg_oeff / league_avg_oeff)
-  df.at[idx, 'adj_oeff'] = row['OEFF'] * (opp_avg_deff / league_avg_deff)
+    game_id = row['GAME-ID']
+    team = row['TEAM']
+    
+    # Find opponent
+    opponent_rows = df[(df['GAME-ID'] == game_id) & (df['TEAM'] != team)]
+    if len(opponent_rows) == 0:
+        continue
+        
+    opponent = opponent_rows.iloc[0]['TEAM']
+    
+    # Get opponent rebounds
+    opp_or = game_opp_rebs[game_id][opponent]['or']
+    opp_dr = game_opp_rebs[game_id][opponent]['dr']
+    
+    # Calculate rebounding rates
+    # Offensive rebound rate = OR / (OR + opponent DR)
+    if (row['OR'] + opp_dr) > 0:
+        df.at[idx, 'orr'] = row['OR'] / (row['OR'] + opp_dr)
+    else:
+        df.at[idx, 'orr'] = 0
+    
+    # Defensive rebound rate = DR / (DR + opponent OR)
+    if (row['DR'] + opp_or) > 0:
+        df.at[idx, 'drr'] = row['DR'] / (row['DR'] + opp_or)
+    else:
+        df.at[idx, 'drr'] = 0
 
-# Print the first 30 games for validation
-validation_columns = ['GAME-ID', 'DATE', 'TEAM', 'OEFF', 'DEFF', 'team_avg_oeff', 'team_avg_deff', 'opp_avg_oeff', 'opp_avg_deff', 'adj_oeff', 'adj_deff']
-print("\nFirst 30 games for validation:")
-print(df[validation_columns].head(30))
+# SECOND PASS: Calculate team averages for all games
+for idx, row in df.iterrows():
+    team = row['TEAM']
+    
+    # Calculate and store team averages before adding the current game
+    if team_stats[team]['games'] > 0:
+        df.at[idx, 'team_avg_oeff'] = team_stats[team]['oeff_sum'] / team_stats[team]['games']
+        df.at[idx, 'team_avg_deff'] = team_stats[team]['deff_sum'] / team_stats[team]['games']
+        df.at[idx, 'team_avg_pace'] = team_stats[team]['pace_sum'] / team_stats[team]['games']
+        
+        # Assist rate
+        if team_stats[team]['fg_sum'] > 0:
+            df.at[idx, 'team_avg_ast_rate'] = team_stats[team]['ast_sum'] / team_stats[team]['fg_sum']
+        else:
+            df.at[idx, 'team_avg_ast_rate'] = 0
+            
+        # Rebound rates
+        if team_stats[team]['or_sum'] + team_stats[team]['opp_dr_sum'] > 0:
+            df.at[idx, 'team_avg_orr'] = team_stats[team]['or_sum'] / (team_stats[team]['or_sum'] + team_stats[team]['opp_dr_sum'])
+        else:
+            df.at[idx, 'team_avg_orr'] = 0
+            
+        if team_stats[team]['dr_sum'] + team_stats[team]['opp_or_sum'] > 0:
+            df.at[idx, 'team_avg_drr'] = team_stats[team]['dr_sum'] / (team_stats[team]['dr_sum'] + team_stats[team]['opp_or_sum'])
+        else:
+            df.at[idx, 'team_avg_drr'] = 0
+    else:
+        # For first game, use actual game values
+        df.at[idx, 'team_avg_oeff'] = row['OEFF']
+        df.at[idx, 'team_avg_deff'] = row['DEFF']
+        df.at[idx, 'team_avg_pace'] = row['PACE']
+        df.at[idx, 'team_avg_ast_rate'] = row['ast_rate']
+        df.at[idx, 'team_avg_orr'] = row['orr']
+        df.at[idx, 'team_avg_drr'] = row['drr']
+    
+    # Update team's cumulative stats for future games
+    team_stats[team]['oeff_sum'] += row['OEFF']
+    team_stats[team]['deff_sum'] += row['DEFF']
+    team_stats[team]['pace_sum'] += row['PACE']
+    team_stats[team]['ast_sum'] += row['A']
+    team_stats[team]['fg_sum'] += row['FG']
+    team_stats[team]['or_sum'] += row['OR']
+    team_stats[team]['dr_sum'] += row['DR']
+    
+    # Update opponent rebound sums
+    opponent_rows = df[(df['GAME-ID'] == row['GAME-ID']) & (df['TEAM'] != team)]
+    if len(opponent_rows) > 0:
+        opp_row = opponent_rows.iloc[0]
+        team_stats[team]['opp_or_sum'] += opp_row['OR']
+        team_stats[team]['opp_dr_sum'] += opp_row['DR']
+    
+    team_stats[team]['games'] += 1
 
-# Validate both Charlotte and Golden State
-teams_to_validate = ["Charlotte", "Golden State"]
-validation_data = {}
+# THIRD PASS: Calculate opponent averages and adjusted metrics
+for idx, row in df.iterrows():
+    game_id = row['GAME-ID']
+    team = row['TEAM']
+    
+    # Find opponent in this game
+    opponent_row = df[(df['GAME-ID'] == game_id) & (df['TEAM'] != team)]
+    if len(opponent_row) == 0:
+        continue
+        
+    opponent = opponent_row.iloc[0]['TEAM']
+    
+    # Get opponent's team_avg values from their row for this game
+    opp_idx = opponent_row.index[0]
+    opp_avg_oeff = df.at[opp_idx, 'team_avg_oeff']
+    opp_avg_deff = df.at[opp_idx, 'team_avg_deff']
+    opp_avg_pace = df.at[opp_idx, 'team_avg_pace']
+    opp_avg_orr = df.at[opp_idx, 'team_avg_orr']
+    opp_avg_drr = df.at[opp_idx, 'team_avg_drr']
+    
+    # Store opponent averages
+    df.at[idx, 'opp_avg_oeff'] = opp_avg_oeff
+    df.at[idx, 'opp_avg_deff'] = opp_avg_deff
+    df.at[idx, 'opp_avg_pace'] = opp_avg_pace
+    df.at[idx, 'opp_avg_orr'] = opp_avg_orr
+    df.at[idx, 'opp_avg_drr'] = opp_avg_drr
+    
+    # Calculate adjusted metrics
+    league_avg_oeff = row['cum_league_avg_oeff']
+    league_avg_deff = row['cum_league_avg_deff']
+    
+    df.at[idx, 'adj_deff'] = row['DEFF'] * (opp_avg_oeff / league_avg_oeff)
+    df.at[idx, 'adj_oeff'] = row['OEFF'] * (opp_avg_deff / league_avg_deff)
+    
+    # Calculate matchup advantage metrics
+    # Check if this is the first game for this team by comparing the team avg with the actual value
+    if df.at[idx, 'team_avg_oeff'] == row['OEFF'] and df.at[idx, 'team_avg_deff'] == row['DEFF']:
+        # This is likely the first game for the team
+        df.at[idx, 'off_advantage'] = row['OEFF'] - df.at[idx, 'opp_avg_deff']
+        df.at[idx, 'def_advantage'] = df.at[idx, 'opp_avg_oeff'] - row['DEFF']
+        df.at[idx, 'pace_diff'] = row['PACE'] - df.at[idx, 'opp_avg_pace']
+        df.at[idx, 'orr_advantage'] = row['orr'] - (1 - df.at[idx, 'opp_avg_drr'])
+        df.at[idx, 'drr_advantage'] = row['drr'] - (1 - df.at[idx, 'opp_avg_orr'])
+    else:
+        # Use team averages for non-first games
+        df.at[idx, 'off_advantage'] = df.at[idx, 'team_avg_oeff'] - df.at[idx, 'opp_avg_deff']
+        df.at[idx, 'def_advantage'] = df.at[idx, 'opp_avg_oeff'] - df.at[idx, 'team_avg_deff']
+        df.at[idx, 'pace_diff'] = df.at[idx, 'team_avg_pace'] - df.at[idx, 'opp_avg_pace']
+        df.at[idx, 'orr_advantage'] = df.at[idx, 'team_avg_orr'] - (1 - df.at[idx, 'opp_avg_drr'])
+        df.at[idx, 'drr_advantage'] = df.at[idx, 'team_avg_drr'] - (1 - df.at[idx, 'opp_avg_orr'])
 
-for team_to_validate in teams_to_validate:
-   # Get the first 10 games for this team
-   team_games = df[df['TEAM'] == team_to_validate].head(10).copy()
-   
-   # Create a table showing how stats evolve game by game
-   validate_columns = ['DATE', 'GAME-ID', 'TEAM', 'OEFF', 'DEFF', 'team_avg_oeff', 'team_avg_deff', 'cum_league_avg_oeff', 'cum_league_avg_deff', 
-                      'opp_avg_oeff', 'opp_avg_deff', 'adj_oeff', 'adj_deff']
-   validation_table = team_games[validate_columns].sort_values('DATE')
-   
-   # Store in dictionary
-   validation_data[team_to_validate] = validation_table
-   
-   # Save to Excel
-   file_name = f'../../data/{team_to_validate.lower().replace(" ", "_")}_team_validate.xlsx'
-   validation_table.to_excel(file_name)
+# Create a team season summary
+team_season = df.groupby('TEAM').agg({
+    'OEFF': 'mean',
+    'DEFF': 'mean',
+    'adj_oeff': 'mean',
+    'adj_deff': 'mean',
+    'PACE': 'mean',
+    'team_avg_ast_rate': 'last',
+    'team_avg_orr': 'last',
+    'team_avg_drr': 'last'
+}).reset_index()
 
+# Calculate net ratings
+team_season['net_rtg'] = team_season['OEFF'] - team_season['DEFF']
+team_season['adj_net_rtg'] = team_season['adj_oeff'] - team_season['adj_deff']
+
+# Sort by adjusted net rating
+team_season_sorted = team_season.sort_values('adj_net_rtg', ascending=False)
+
+# Print team rankings
+print("\nTeam Rankings by Adjusted Net Rating:")
+print(team_season_sorted[['TEAM', 'adj_oeff', 'adj_deff', 'adj_net_rtg']].head(10))
+
+# Save the processed data
+output_file = '../../data/nba_2014_2015_team_metrics.csv'
+df.to_csv(output_file, index=False)
+print(f"\nProcessed data saved to: {output_file}")
+
+# Also save the team summary
+summary_file = '../../data/nba_2014_2015_team_summary.csv'
+team_season_sorted.to_csv(summary_file, index=False)
+print(df.info())
+print(f"Team summary saved to: {summary_file}")
