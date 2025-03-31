@@ -3,131 +3,180 @@ import numpy as np
 
 pd.set_option('display.max_columns', None)
 
-df_orig = pd.read_excel('../../data/processed_2015.xlsx')
-df_orig['date'] = pd.to_datetime(df_orig['date'])
-df = df_orig.copy()
+# -------------------------
+# Helper Functions
+# -------------------------
+def calc_moving_avg_1(df, columns, player_id_col):
+    """
+    Calculates 1-game moving averages (previous game) for specified columns grouped by player.
+    """
+    df = df.sort_values([player_id_col, 'date'])
+    for col in columns:
+        new_col = f'rolling_1_{col}'
+        df[new_col] = df.groupby(player_id_col)[col].transform(
+            lambda x: x.rolling(window=1, min_periods=1).mean().shift(1)
+        )
+        df[new_col] = df[new_col].fillna(df[col])
+    return df
 
-def calc_moving_avg_3(df, columns):
+def calc_moving_avg_3(df, columns, player_id_col):
     """
     Calculates 3-game moving averages for specified columns grouped by player.
     """
-    # Ensure the DataFrame is sorted by player and date
-    df = df.sort_values(['player_name', 'date'])
+    df = df.sort_values([player_id_col, 'date'])
     for col in columns:
         new_col = f'rolling_3_{col}'
-        df[new_col] = df.groupby('player_name')[col].transform(lambda x: x.rolling(window=3, min_periods=1).mean())
+        df[new_col] = df.groupby(player_id_col)[col].transform(
+            lambda x: x.rolling(window=3, min_periods=1).mean()
+        )
     return df
 
-def calc_moving_avg_5(df, columns):
+def calc_moving_avg_5(df, columns, player_id_col):
     """
     Calculates 5-game moving averages for specified columns grouped by player.
     """
-    # Ensure the DataFrame is sorted by player and date
-    df = df.sort_values(['player_name', 'date'])
+    df = df.sort_values([player_id_col, 'date'])
     for col in columns:
         new_col = f'rolling_5_{col}'
-        df[new_col] = df.groupby('player_name')[col].transform(lambda x: x.rolling(window=5, min_periods=1).mean())
+        df[new_col] = df.groupby(player_id_col)[col].transform(
+            lambda x: x.rolling(window=5, min_periods=1).mean()
+        )
     return df
 
-def calc_moving_avg_10(df, columns):
+def calc_moving_avg_10(df, columns, player_id_col):
     """
     Calculates 10-game moving averages for specified columns grouped by player.
     """
-    # Ensure the DataFrame is sorted by player and date
-    df = df.sort_values(['player_name', 'date'])
+    df = df.sort_values([player_id_col, 'date'])
     for col in columns:
         new_col = f'rolling_10_{col}'
-        df[new_col] = df.groupby('player_name')[col].transform(lambda x: x.rolling(window=10, min_periods=1).mean())
+        df[new_col] = df.groupby(player_id_col)[col].transform(
+            lambda x: x.rolling(window=10, min_periods=1).mean()
+        )
     return df
 
-
-# Convert 'date' to datetime if not already
-df['date'] = pd.to_datetime(df['date'])
-
-# Define the rebound columns (Offensive, Defensive, Total Rebounds)
-rebound_cols = ['OR', 'DR', 'TOT']
-
-# Calculate 3, 5, and 10-game moving averages
-df = calc_moving_avg_3(df, rebound_cols)
-df = calc_moving_avg_5(df, rebound_cols)
-df = calc_moving_avg_10(df, rebound_cols)
-
-"""FEATURE ENGINEERING / DERIVING STATISTICS FROM BASELINE STATS"""
-# field goal percentage
-df['FG%'] = np.where(df['FGA'] > 0, df['FG'] / df['FGA'], 0)
-# 3 pointer percentage
-df['3P%'] = np.where(df['3PA'] > 0, df['3P'] / df['3PA'], 0)
-# effective field goal percentage (shooting 3/4 3pointers is worth more than 3/4 2pointers)
-df['eFG%'] = np.where(df['FGA'] > 0, (df['FG'] + 0.5 * df['3P']) / df['FGA'],0)
-# true shooting percentage 
-df['TS%'] = np.where((df['FGA'] + 0.44 * df['FTA']) > 0, 0.5 * df['PTS'] / (df['FGA'] + 0.44 * df['FTA']), 0)
-# true shooting attempts
-df['TSA'] = df['FGA'] + 0.44 * df['FTA']
-# points, rebounds, assists per 36 minutes
-df['PTS_per36'] = np.where(df['MIN'] > 0, (36 * df['PTS']) / df['MIN'], 0)
-df['TOT_per36'] = np.where(df['MIN'] > 0, (36 * df['TOT']) / df['MIN'], 0)
-df['A_per36']   = np.where(df['MIN'] > 0, (36 * df['A']) / df['MIN'], 0)
-# gmsc = pts + 0.4*fg - 0.7*fga - 0.4*(fta - ft) + 0.7*or + 0.3*dr + stl + 0.7*a + 0.7*blk - 0.4*pf - to
-df['GmSc'] = (
-    df['PTS'] +
-    0.4 * df['FG'] -
-    0.7 * df['FGA'] -
-    0.4 * (df['FTA'] - df['FT']) +
-    0.7 * df['OR'] +
-    0.3 * df['DR'] +
-    df['ST'] +
-    0.7 * df['A'] +
-    0.7 * df['BL'] -
-    0.4 * df['PF'] -
-    df['TO']
-)
-
-def add_rolling_averages(df, col, windows=[3, 5, 10], group_col='player_name'):
-
+def add_rolling_averages(df, col, windows=[1, 3, 5, 10], group_col=None):
+    """Add rolling averages for a given column across multiple window sizes."""
+    if group_col is None:
+        group_col = 'player_name'
     df = df.sort_values([group_col, 'date'])
     for window in windows:
         new_col = f'rolling_{window}_{col}'
-        df[new_col] = df.groupby(group_col)[col].transform(lambda x: x.rolling(window, min_periods=1).mean())
+        df[new_col] = df.groupby(group_col)[col].transform(
+            lambda x: x.rolling(window, min_periods=1).mean()
+        )
     return df
 
-features = ['FG%', '3P%', 'eFG%', 'TS%', 'TSA', 'PTS_per36', 'TOT_per36', 'A_per36', 'GmSc']
-avg_features = ['MIN','PTS','FG%', '3P%', 'eFG%', 'TS%', 'TSA','BL','A','TO', 'GmSc']
-for feat in features:
-    df = add_rolling_averages(df, feat, windows=[3, 5, 10], group_col='player_name')
-
-def add_season_average(df, columns, group_col='player_name'):
-    """Calculate player's season average at the instance of that time step"""
+def add_season_average(df, columns, group_col):
+    """Calculate player's season average at the instance of that time step."""
     df = df.sort_values([group_col, 'date'])
     for col in columns:
         season_avg_col = f'season_avg_{col}'
-        df[season_avg_col] = df.groupby(group_col)[col].transform(lambda x: x.expanding(min_periods=1).mean().shift(1))
-        # filling first game nan values with the current game 
+        df[season_avg_col] = df.groupby(group_col)[col].transform(
+            lambda x: x.expanding(min_periods=1).mean().shift(1)
+        )
+        # Fill first game NaN values with the current game value
         df[season_avg_col] = df[season_avg_col].fillna(df[col])
     return df
 
 def add_game_vs_season_diff(df, columns, prefix='diff_'):
-    """For each column, compute the difference between the current game value and the season average"""
+    """Compute the difference between the current game value and the season average."""
     for col in columns:
         diff_col = f'{prefix}{col}'
         df[diff_col] = df[col] - df[f'season_avg_{col}']
     return df
 
-df = add_season_average(df,avg_features)
-df = add_game_vs_season_diff(df,avg_features)
+# -------------------------
+# Main Processing Function
+# -------------------------
+def process_season(year):
+    print(f"Processing season {year}...")
+    # Load the dataset for the given season
+    file_path = f'../../data/processed_{year}.xlsx'
+    df_orig = pd.read_excel(file_path)
+    df_orig['date'] = pd.to_datetime(df_orig['date'])
+    df = df_orig.copy()
+    
+    # Drop any unnamed columns
+    unnamed_columns = [col for col in df.columns if 'Unnamed' in str(col)]
+    if 'Unnamed: 0' in df.columns:
+        df = df.drop(columns=['Unnamed: 0']).reset_index(drop=True)
+    
+    # Determine player identifier column
+    if 'player_id' in df.columns and df['player_id'].dtype.name != 'str':
+        player_id_col = 'player_id'
+    else:
+        player_id_col = 'player_name'
+    
+    # Define the base stats columns
+    base_stats = [
+        'FG', 'FGA', '3P', '3PA', 'FT', 'FTA', 
+        'OR', 'DR', 'TOT', 'A', 'ST', 'BL', 'TO', 'PF', 'PTS', 'MIN'
+    ]
+    
+    # Drop any existing rolling_5_* columns to avoid duplicates
+    rolling_5_columns = [col for col in df.columns if col.startswith('rolling_5_')]
+    df = df.drop(columns=rolling_5_columns, errors='ignore')
+    
+    # Calculate moving averages for base stats
+    df = calc_moving_avg_1(df, base_stats, player_id_col)
+    df = calc_moving_avg_3(df, base_stats, player_id_col)
+    df = calc_moving_avg_5(df, base_stats, player_id_col)
+    df = calc_moving_avg_10(df, base_stats, player_id_col)
+    
+    # FEATURE ENGINEERING: Deriving additional statistics from base stats
+    df['FG%'] = np.where(df['FGA'] > 0, df['FG'] / df['FGA'], 0)
+    df['3P%'] = np.where(df['3PA'] > 0, df['3P'] / df['3PA'], 0)
+    df['eFG%'] = np.where(df['FGA'] > 0, (df['FG'] + 0.5 * df['3P']) / df['FGA'], 0)
+    df['TS%'] = np.where((df['FGA'] + 0.44 * df['FTA']) > 0,
+                         0.5 * df['PTS'] / (df['FGA'] + 0.44 * df['FTA']),
+                         0)
+    df['TSA'] = df['FGA'] + 0.44 * df['FTA']
+    df['PTS_per36'] = np.where(df['MIN'] > 0, (36 * df['PTS']) / df['MIN'], 0)
+    df['TOT_per36'] = np.where(df['MIN'] > 0, (36 * df['TOT']) / df['MIN'], 0)
+    df['A_per36'] = np.where(df['MIN'] > 0, (36 * df['A']) / df['MIN'], 0)
+    df['GmSc'] = (
+        df['PTS'] +
+        0.4 * df['FG'] -
+        0.7 * df['FGA'] -
+        0.4 * (df['FTA'] - df['FT']) +
+        0.7 * df['OR'] +
+        0.3 * df['DR'] +
+        df['ST'] +
+        0.7 * df['A'] +
+        0.7 * df['BL'] -
+        0.4 * df['PF'] -
+        df['TO']
+    )
+    
+    # Calculate rolling averages for derived features
+    derived_features = ['FG%', '3P%', 'eFG%', 'TS%', 'TSA', 'PTS_per36', 'TOT_per36', 'A_per36', 'GmSc']
+    for feat in derived_features:
+        df = add_rolling_averages(df, feat, windows=[1, 3, 5, 10], group_col=player_id_col)
+    
+    # Calculate season averages and differences
+    avg_features = ['MIN', 'PTS', 'FG%', '3P%', 'eFG%', 'TS%', 'TSA', 'BL', 'A', 'TO', 'GmSc', 'OR', 'DR', 'TOT']
+    df = add_season_average(df, avg_features, player_id_col)
+    df = add_game_vs_season_diff(df, avg_features)
+    
+    # Identify new columns to merge back into the original dataframe
+    new_cols = [c for c in df.columns if c not in df_orig.columns]
+    join_keys = ['game_id', player_id_col]
+    
+    merged_df = df_orig.merge(df[join_keys + new_cols], on=join_keys, how='left')
+    
+    print(f"Original columns: {len(df_orig.columns)}")
+    print(f"New columns added: {len(new_cols)}")
+    print(f"Total columns: {len(merged_df.columns)}")
+    
+    # Save the preprocessed dataset for the current season
+    output_file = f'../../data/feature_engineer/feature_engineered_{year}.xlsx'
+    merged_df.to_excel(output_file, index=False)
+    print(f"Saved processed file to {output_file}\n")
+    df.head(1)
 
-
-new_cols = [c for c in df.columns if c not in df_orig.columns]
-
-merged_df = df_orig.merge(
-    df[['game_id','player_id'] + new_cols],
-    on=['game_id','player_id'],
-    how='left'
-)
-
-
-merged_df.to_excel('../../data/feature_engineered_2015.xlsx', index=False)
-print(merged_df.columns)
-merged_df.head(10).to_excel('../../data/sample_feature_engineered_2015.xlsx', index=False)
-
-
-
+# -------------------------
+# Process Seasons 2015 to 2024
+# -------------------------
+for year in range(2015, 2025):
+    process_season(year)
