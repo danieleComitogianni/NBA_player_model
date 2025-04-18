@@ -4,13 +4,6 @@ import os
 def merge_player_team_data(season, base_dir='../../data/'):
     """
     Merge player-level and team-level NBA datasets for a specific season.
-    
-    Args:
-        season (int or str): The NBA season year (e.g., 2015, 2024)
-        base_dir (str): Base directory for data files
-        
-    Returns:
-        pd.DataFrame: The merged dataset
     """
     # Define file paths
     player_file = os.path.join(base_dir, f'feature_engineer/feature_engineered_{season}.xlsx')
@@ -46,10 +39,9 @@ def merge_player_team_data(season, base_dir='../../data/'):
     columns_to_drop = [
         'FG', 'FGA', '3P','3PA', 'FT', 'FTA', 'OR', 'DR', 'TOT', 'A', 'PF', 'ST', 'TO', 'BL', 'PTS',
         'POSS', 'OEFF', 'DEFF', 'cum_league_avg_oeff', 'cum_league_avg_deff',
-        'cum_league_avg_pace', 'ast_rate'
+        'cum_league_avg_pace', 'ast_rate','adj_oeff','adj_deff','orr','drr'
     ]
     
-    # Only drop columns that exist
     cols_to_drop = [col for col in columns_to_drop if col in team_df.columns]
     team_df = team_df.drop(columns=cols_to_drop)
     
@@ -76,10 +68,6 @@ def merge_player_team_data(season, base_dir='../../data/'):
 def validate_before_merge(player_df, team_df):
     """
     Validate datasets before merging to identify potential issues.
-    
-    Args:
-        player_df (pd.DataFrame): Player-level dataset
-        team_df (pd.DataFrame): Team-level dataset
     """
     print("\n=== Validation Before Merge ===")
     
@@ -113,11 +101,6 @@ def validate_before_merge(player_df, team_df):
 def validate_after_merge(player_df, team_df, merged_df):
     """
     Validate the merged dataset to confirm successful merge.
-    
-    Args:
-        player_df (pd.DataFrame): Player-level dataset
-        team_df (pd.DataFrame): Team-level dataset
-        merged_df (pd.DataFrame): Merged dataset
     """
     print("\n=== Validation After Merge ===")
     
@@ -140,10 +123,8 @@ def validate_after_merge(player_df, team_df, merged_df):
     else:
         print("No missing values found in team columns - merge successful!")
 
-# Example usage
 if __name__ == "__main__":
-    
-    # Merge data for multiple seasons
+
     seasons = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024]
     for season in seasons:
         try:

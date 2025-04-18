@@ -12,4 +12,4 @@ for col in categorical_columns:
 dates_ordered = df['date'].is_monotonic_increasing
 print("Dates are ordered:", dates_ordered)
 
-df.to_parquet('../../data/merged_data_for_model/merged_model_data_collab.parquet')
+df.to_parquet('../../data/merged_data_for_model/merged_model_data_collab_2.parquet')

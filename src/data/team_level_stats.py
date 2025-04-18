@@ -8,25 +8,14 @@ pd.set_option('display.max_columns', None)
 def process_season(file_path, output_dir):
     """
     Process a single NBA season file and save the results
-    
-    Parameters:
-    file_path (str): Path to the season data Excel file
-    output_dir (str): Directory to save the processed data
-    
-    Returns:
-    DataFrame: Team season summary with rankings
     """
     print(f"\nProcessing: {os.path.basename(file_path)}")
-    
-    # Extract season from filename (assuming format like "2023-2024_NBA...")
     season = os.path.basename(file_path).split('_')[0]
     
-    # Determine the end year of the season for the output file naming
-    # For a season like "2014-2015", we want to use "2015"
     if '-' in season:
-        season_year = season.split('-')[1]  # Take the end year
+        season_year = season.split('-')[1]
     else:
-        season_year = season  # If not in expected format, use as is
+        season_year = season
     
     print(f"Season: {season}, Using year {season_year} for output file")
     
@@ -37,7 +26,7 @@ def process_season(file_path, output_dir):
     # Select relevant columns
     keep_columns = [
         'GAME-ID', 'DATE', 'TEAM', 'FG', 'FGA', '3P', '3PA', 'FT', 'FTA',
-        'OR', 'DR', 'TOT', 'A', 'PF', 'ST', 'TO', 'BL', 'PTS', 'POSS', 'PACE', 'OEFF', 'DEFF'
+        'OR', 'DR', 'TOT', 'A', 'PF', 'ST', 'TO', 'BL', 'PTS', 'POSS', 'PACE', 'OEFF', 'DEFF','OPENING SPREAD','OPENING TOTAL'
     ]
     
     # Ensure all columns exist, skip any that don't
@@ -49,6 +38,10 @@ def process_season(file_path, output_dir):
     df = team_df[existing_columns].copy()
     print("Selected columns:", df.columns)
     
+    df['OPENING SPREAD'] = pd.to_numeric(df['OPENING SPREAD'], errors='coerce')
+    df['OPENING TOTAL'] = pd.to_numeric(df['OPENING TOTAL'], errors='coerce')
+    df['implied_team_total'] = (df['OPENING TOTAL'] / 2) - (df['OPENING SPREAD'] / 2)
+
     # Convert dates and sort chronologically
     df['DATE'] = pd.to_datetime(df['DATE'])
     df = df.sort_values('DATE')
@@ -67,9 +60,10 @@ def process_season(file_path, output_dir):
     daily_avg['cum_league_avg_oeff'] = daily_avg['daily_avg_oeff'].expanding().mean().shift(1)
     daily_avg['cum_league_avg_deff'] = daily_avg['daily_avg_deff'].expanding().mean().shift(1)
     daily_avg['cum_league_avg_pace'] = daily_avg['daily_avg_pace'].expanding().mean().shift(1)
-    daily_avg['cum_league_avg_oeff'] = daily_avg['cum_league_avg_oeff'].fillna(daily_avg['daily_avg_oeff'])
-    daily_avg['cum_league_avg_deff'] = daily_avg['cum_league_avg_deff'].fillna(daily_avg['daily_avg_deff'])
-    daily_avg['cum_league_avg_pace'] = daily_avg['cum_league_avg_pace'].fillna(daily_avg['daily_avg_pace'])
+    # Fill initial NaN (before day 1) with 0.0
+    daily_avg['cum_league_avg_oeff'] = daily_avg['cum_league_avg_oeff'].fillna(0.0)
+    daily_avg['cum_league_avg_deff'] = daily_avg['cum_league_avg_deff'].fillna(0.0)
+    daily_avg['cum_league_avg_pace'] = daily_avg['cum_league_avg_pace'].fillna(0.0)
     
     df = pd.merge(df, daily_avg[['DATE', 'cum_league_avg_oeff', 'cum_league_avg_deff', 'cum_league_avg_pace']], on='DATE', how='left')
     
@@ -194,12 +188,12 @@ def process_season(file_path, output_dir):
                 df.at[idx, 'team_avg_drr'] = 0
         else:
             # For first game, use actual game values
-            df.at[idx, 'team_avg_oeff'] = row['OEFF']
-            df.at[idx, 'team_avg_deff'] = row['DEFF']
-            df.at[idx, 'team_avg_pace'] = row['PACE']
-            df.at[idx, 'team_avg_ast_rate'] = row['ast_rate']
-            df.at[idx, 'team_avg_orr'] = row['orr']
-            df.at[idx, 'team_avg_drr'] = row['drr']
+                df.at[idx, 'team_avg_oeff'] = 0.0
+                df.at[idx, 'team_avg_deff'] = 0.0
+                df.at[idx, 'team_avg_pace'] = 0.0
+                df.at[idx, 'team_avg_ast_rate'] = 0.0
+                df.at[idx, 'team_avg_orr'] = 0.0
+                df.at[idx, 'team_avg_drr'] = 0.0
         
         # Update team's cumulative stats for future games
         team_stats[team]['oeff_sum'] += row['OEFF']
@@ -224,6 +218,9 @@ def process_season(file_path, output_dir):
         game_id = row['GAME-ID']
         team = row['TEAM']
         
+        team_avg_oeff = df.at[idx, 'team_avg_oeff'] # Team's avg O BEFORE this game
+        team_avg_deff = df.at[idx, 'team_avg_deff']
+
         # Find opponent in this game
         opponent_row = df[(df['GAME-ID'] == game_id) & (df['TEAM'] != team)]
         if len(opponent_row) == 0:
@@ -250,48 +247,88 @@ def process_season(file_path, output_dir):
         league_avg_oeff = row['cum_league_avg_oeff']
         league_avg_deff = row['cum_league_avg_deff']
         
-        df.at[idx, 'adj_deff'] = row['DEFF'] * (opp_avg_oeff / league_avg_oeff)
-        df.at[idx, 'adj_oeff'] = row['OEFF'] * (opp_avg_deff / league_avg_deff)
+        df.at[idx, 'pred_adj_oeff'] = np.nan
+        df.at[idx, 'pred_adj_deff'] = np.nan
+
+        if pd.notna(team_avg_oeff) and pd.notna(opp_avg_deff) and pd.notna(league_avg_deff) and league_avg_deff != 0.0:
+           # Main calculation
+           df.at[idx, 'pred_adj_oeff'] = team_avg_oeff * (opp_avg_deff / league_avg_deff)
+        elif pd.notna(team_avg_oeff):
+            # Use incoming team average
+            df.at[idx, 'pred_adj_oeff'] = team_avg_oeff
+
+        if pd.notna(team_avg_deff) and pd.notna(opp_avg_oeff) and pd.notna(league_avg_oeff) and league_avg_oeff != 0.0:
+           # Main calculation
+           df.at[idx, 'pred_adj_deff'] = team_avg_deff * (opp_avg_oeff / league_avg_oeff)
+        elif pd.notna(team_avg_deff):
+           # Use incoming team average
+           df.at[idx, 'pred_adj_deff'] = team_avg_deff
         
         # Calculate matchup advantage metrics
         # Check if this is the first game for this team by comparing the team avg with the actual value
-        if df.at[idx, 'team_avg_oeff'] == row['OEFF'] and df.at[idx, 'team_avg_deff'] == row['DEFF']:
-            # This is likely the first game for the team
-            df.at[idx, 'off_advantage'] = row['OEFF'] - df.at[idx, 'opp_avg_deff']
-            df.at[idx, 'def_advantage'] = df.at[idx, 'opp_avg_oeff'] - row['DEFF']
-            df.at[idx, 'pace_diff'] = row['PACE'] - df.at[idx, 'opp_avg_pace']
-            df.at[idx, 'orr_advantage'] = row['orr'] - (1 - df.at[idx, 'opp_avg_drr'])
-            df.at[idx, 'drr_advantage'] = row['drr'] - (1 - df.at[idx, 'opp_avg_orr'])
+        team_oeff = team_avg_oeff
+        team_deff = team_avg_deff
+        team_pace = df.at[idx, 'team_avg_pace']
+        team_orr = df.at[idx, 'team_avg_orr']
+        team_drr = df.at[idx, 'team_avg_drr']
+
+        opp_oeff = df.at[idx, 'opp_avg_oeff']
+        opp_deff = df.at[idx, 'opp_avg_deff']
+        opp_pace = df.at[idx, 'opp_avg_pace']
+        opp_orr = df.at[idx, 'opp_avg_orr']
+        opp_drr = df.at[idx, 'opp_avg_drr']
+
+        # Calculate advantages, defaulting to 0.0 if either team has no prior data (avg is 0.0)
+        if pd.isna(team_oeff) or team_oeff == 0.0 or pd.isna(opp_deff) or opp_deff == 0.0:
+            df.at[idx, 'off_advantage'] = 0.0
         else:
-            # Use team averages for non-first games
-            df.at[idx, 'off_advantage'] = df.at[idx, 'team_avg_oeff'] - df.at[idx, 'opp_avg_deff']
-            df.at[idx, 'def_advantage'] = df.at[idx, 'opp_avg_oeff'] - df.at[idx, 'team_avg_deff']
-            df.at[idx, 'pace_diff'] = df.at[idx, 'team_avg_pace'] - df.at[idx, 'opp_avg_pace']
-            df.at[idx, 'orr_advantage'] = df.at[idx, 'team_avg_orr'] - (1 - df.at[idx, 'opp_avg_drr'])
-            df.at[idx, 'drr_advantage'] = df.at[idx, 'team_avg_drr'] - (1 - df.at[idx, 'opp_avg_orr'])
+            df.at[idx, 'off_advantage'] = team_oeff - opp_deff
+
+        if pd.isna(opp_oeff) or opp_oeff == 0.0 or pd.isna(team_deff) or team_deff == 0.0:
+            df.at[idx, 'def_advantage'] = 0.0
+        else:
+            df.at[idx, 'def_advantage'] = opp_oeff - team_deff 
+
+        if pd.isna(team_pace) or team_pace == 0.0 or pd.isna(opp_pace) or opp_pace == 0.0:
+            df.at[idx, 'pace_diff'] = 0.0
+        else:
+            df.at[idx, 'pace_diff'] = team_pace - opp_pace
+
+        # For rebounding advantages, check if required opponent rate exists
+        opp_drr_inv = (1.0 - opp_drr) if pd.notna(opp_drr) and opp_drr != 0.0 else 0.0
+        if pd.isna(team_orr) or team_orr == 0.0 or opp_drr_inv == 0.0 :
+             df.at[idx, 'orr_advantage'] = 0.0
+        else:
+             df.at[idx, 'orr_advantage'] = team_orr - opp_drr_inv # Team ORR vs Opponent non-DRR
+
+        opp_orr_inv = (1.0 - opp_orr) if pd.notna(opp_orr) and opp_orr != 0.0 else 0.0
+        if pd.isna(team_drr) or team_drr == 0.0 or opp_orr_inv == 0.0:
+             df.at[idx, 'drr_advantage'] = 0.0
+        else:
+             df.at[idx, 'drr_advantage'] = team_drr - opp_orr_inv
     
     # Create a team season summary
     team_season = df.groupby('TEAM').agg({
-        'OEFF': 'mean',
-        'DEFF': 'mean',
-        'adj_oeff': 'mean',
-        'adj_deff': 'mean',
+        'OEFF': 'mean',                     # Raw average OEFF
+        'DEFF': 'mean',                     # Raw average DEFF
+        'pred_adj_oeff': 'mean',            # Average of the predictive adjusted OEFF
+        'pred_adj_deff': 'mean',            # Average of the predictive adjusted DEFF
         'PACE': 'mean',
-        'team_avg_ast_rate': 'last',
-        'team_avg_orr': 'last',
-        'team_avg_drr': 'last'
+        'team_avg_ast_rate': 'mean',
+        'team_avg_orr': 'mean',
+        'team_avg_drr': 'mean'
     }).reset_index()
-    
+
     # Calculate net ratings
-    team_season['net_rtg'] = team_season['OEFF'] - team_season['DEFF']
-    team_season['adj_net_rtg'] = team_season['adj_oeff'] - team_season['adj_deff']
-    
-    # Sort by adjusted net rating
-    team_season_sorted = team_season.sort_values('adj_net_rtg', ascending=False)
-    
+    team_season['raw_net_rtg'] = team_season['OEFF'] - team_season['DEFF']
+    team_season['pred_adj_net_rtg'] = team_season['pred_adj_oeff'] - team_season['pred_adj_deff'] # <-- Uses new column names
+
+    # Sort by predictive adjusted net rating
+    team_season_sorted = team_season.sort_values('pred_adj_net_rtg', ascending=False) # <-- Uses new column name
+
     # Print team rankings
-    print(f"\nTeam Rankings for {season} by Adjusted Net Rating:")
-    print(team_season_sorted[['TEAM', 'adj_oeff', 'adj_deff', 'adj_net_rtg']].head(10))
+    print(f"\nTeam Rankings for {season} by Predictive Adjusted Net Rating:")
+    print(team_season_sorted[['TEAM', 'pred_adj_oeff', 'pred_adj_deff', 'pred_adj_net_rtg']].head(10))
     
     # Save the processed data with the end year of the season
     output_file = os.path.join(output_dir, f"nba_{season_year}_team_metrics.csv")
