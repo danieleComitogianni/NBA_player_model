@@ -265,7 +265,6 @@ def process_season(file_path, output_dir):
            df.at[idx, 'pred_adj_deff'] = team_avg_deff
         
         # Calculate matchup advantage metrics
-        # Check if this is the first game for this team by comparing the team avg with the actual value
         team_oeff = team_avg_oeff
         team_deff = team_avg_deff
         team_pace = df.at[idx, 'team_avg_pace']
@@ -321,10 +320,10 @@ def process_season(file_path, output_dir):
 
     # Calculate net ratings
     team_season['raw_net_rtg'] = team_season['OEFF'] - team_season['DEFF']
-    team_season['pred_adj_net_rtg'] = team_season['pred_adj_oeff'] - team_season['pred_adj_deff'] # <-- Uses new column names
+    team_season['pred_adj_net_rtg'] = team_season['pred_adj_oeff'] - team_season['pred_adj_deff']
 
     # Sort by predictive adjusted net rating
-    team_season_sorted = team_season.sort_values('pred_adj_net_rtg', ascending=False) # <-- Uses new column name
+    team_season_sorted = team_season.sort_values('pred_adj_net_rtg', ascending=False)
 
     # Print team rankings
     print(f"\nTeam Rankings for {season} by Predictive Adjusted Net Rating:")
@@ -342,7 +341,6 @@ def main():
     data_dir = '../../data'
     output_dir = os.path.join(data_dir, 'team_level_stats')
     
-    # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
     
     # Get all NBA box score files directly from data directory
