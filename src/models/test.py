@@ -7,5 +7,5 @@ print(f"PyTorch version: {torch.__version__}")
 print(f"PyTorch Lightning version: {pl.__version__}")
 print(f"PyTorch Forecasting version: {pytorch_forecasting.__version__}")
 
-# Try importing the previously problematic function
+
 print("Successfully imported optimize_hyperparameters")
