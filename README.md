@@ -124,14 +124,3 @@ The scripts should be executed in the following order:
 - **Output:**
   - `../../data/merged_data_for_model/merged_model_data.xlsx`. The final combined dataset across all processed seasons in Excel format.
 
-**7. _Untitled Script_ (Let's call it `final_formatting_save.py`)**
-
-- **Goal:** Final data type adjustments and saving the combined dataset in Parquet format.
-- **Input:**
-  - `../../data/merged_data_for_model/merged_model_data.xlsx` (from step 6).
-- **Actions:**
-  1.  Loads the combined Excel file.
-  2.  Re-applies the 'category' data type to the specified ID columns (this might be redundant if saved correctly in step 6, but ensures correctness).
-  3.  Checks if the `date` column is sorted chronologically (`is_monotonic_increasing`).
-- **Output:**
-  - `../../data/merged_data_for_model/merged_model_data_collab_2.parquet`. The final dataset saved in Parquet format, which is generally more efficient for storage and loading in data science workflows compared to Excel for large datasets.
